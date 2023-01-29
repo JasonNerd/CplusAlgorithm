@@ -51,6 +51,13 @@ void insert(avlT &root, int w);
 // 删除节点
 void delNode(avlT &root, int w);
 
+// 寻找前驱节点，注意root必有左孩子
+avlNode* getPrev(avlT root);
+// 寻找后继节点，注意root必有右孩子
+avlNode* getPost(avlT root);
+// 调整
+void adjust(avlT &root);
+// 前序遍历
 void preTranverse(avlT t){
     if(t){
         cout << t->weight << " ";
@@ -58,7 +65,7 @@ void preTranverse(avlT t){
         preTranverse(t->rch);
     }
 }
-
+// 中序遍历
 void midTranverse(avlT t){
     if(t){
         midTranverse(t->lch);
@@ -75,17 +82,21 @@ int main(){
     for(int i=0; i<n; i++){
         insert(t, inputseq[i]);
     }
+    delNode(t, 8);
     preTranverse(t);
     cout << endl;
     midTranverse(t);
-/*
-7 3 2 1 5 4 6 9 8 10
-1 2 3 4 5 6 7 8 9 10
-       7
-  3        9
-2   5    8  10 
-  4  6
-*/
+    cout << endl;
+    delNode(t, 9);
+    preTranverse(t);
+    cout << endl;
+    midTranverse(t);
+    cout << endl;
+    delNode(t, 10);
+    preTranverse(t);
+    cout << endl;
+    midTranverse(t);
+
     return 0;
 }
 
@@ -103,6 +114,7 @@ int getHeight(avlNode* root){
 } 
 
 int getBalanceFactor(avlNode* root){
+    if(!root) return 0;
     return getHeight(root->lch)-getHeight(root->rch);
 }
 
@@ -137,37 +149,79 @@ void insert(avlT &root, int w){
     } else {
         if(w < root->weight){
             insert(root->lch, w);   // 插入到左孩子
-            updateHeight(root);     // 插入后更新根节点高度
-            int f = getBalanceFactor(root);     // 计算根节点平衡因子
-            int fl = getBalanceFactor(root->lch);   // 计算左孩子的因子
-            // 首先判断根节点是否平衡
-            if(f > 1){
-                if(fl>0){
-                    rightRotate(root);
-                }else{
-                    leftRotate(root->lch);
-                    rightRotate(root);
-                }
-            }
         } else {
             insert(root->rch, w);
-            updateHeight(root);
-            int f = getBalanceFactor(root);
-            int fr = getBalanceFactor(root->rch);
-            if(f < -1){
-                if(fr>0){   // RL
-                    rightRotate(root->rch);
-                    leftRotate(root);
-                }else{      // RR
-                    leftRotate(root);
-                }
-            }
         }
+        adjust(root);
     }
 }
 
 void delNode(avlT &root, int w){
-    
+    if (root){
+        if (root->weight == w){
+            // 查找到了该节点, 查看是否有左右孩子
+            if(!root->lch && !root->rch){
+                // 执行实际删除操作
+                root = nullptr;
+                return ;
+            }else if(root->lch && !root->rch){
+                // 只有左孩子
+                avlNode *prev = getPrev(root);
+                root->weight = prev->weight;
+                delNode(root->lch, root->weight);
+            }else {
+                // 有右孩子或者有两个孩子
+                avlNode* post = getPost(root);
+                root->weight = post->weight;
+                delNode(root->rch, root->weight);
+            }
+        }else if (w < root->weight){
+            delNode(root->lch, w);
+        }else{
+            delNode(root->rch, w);
+        }
+        // 更新
+        adjust(root);
+    }
+}
+
+void adjust(avlT &root){
+    updateHeight(root);
+    int f = getBalanceFactor(root);
+    int fl = getBalanceFactor(root->lch), fr = getBalanceFactor(root->rch);
+    if(f>1){
+        // 左子树过高
+        if(fl>0){   // LL型, 对根节点右旋
+            rightRotate(root);
+        }else { //LR型, 注意在删除节点时可能出现fl=0的情况
+            leftRotate(root->lch);
+            rightRotate(root);
+        }
+    }else if(f<-1){
+        // 右子树过高
+        if(fr>0){   // RL
+            rightRotate(root->rch);
+            leftRotate(root);
+        }else{ // RR
+            leftRotate(root);
+        }
+    }
+}
+
+avlNode* getPrev(avlT root){
+    avlNode *p = root->lch;
+    while (p->rch){
+        p = p->rch;
+    }
+    return p;
+}
+
+avlNode* getPost(avlT root){
+     avlNode *p = root->rch;
+     while (p->lch){
+        p = p->lch;
+     }
+     return p;     
 }
 
 /*
@@ -251,3 +305,71 @@ Bl Cl  Cr Ar
 离
 */
 
+/*
+节点删除示意（核心在于叶节点的删除与路径节点的高度调整，平衡因子调整
+     5          h=4
+  3    7        h=3
+ 2 4  6 8       h=2
+1        9      h=1
+
+del((5), 4)
+    4<5, del((3), 4)
+        4>3, del((4), 4), rch // 因右子树删除导致不平衡必为正2
+            4==4,  no lch, no rch, ==> leaf
+            root = nullptr;     // a
+            return ;
+        updateHeight((3));
+        f3 = getBalanceFactor((3));
+        if(f3>1){
+            f3l = getBalanceFactor((2));
+            // 判断是LL或LR再进行处理
+        }
+        // b
+    adjust()
+return ;
+
+a:
+     5          h=4
+  3    7        h=3
+ 2    6 8       h=2
+1        9      h=1
+
+b:
+     5           h=4
+  2     7        h=3
+ 1 3   6 8       h=2
+          9      h=1
+
+*/
+
+/*
+     5          h=4
+  3    7        h=3
+ 2 4  6 8       h=2
+1        9      h=1
+
+del((5), 2)
+    2<5 ==> 5->lch ==> del((3), 2)
+        2<3 ==> 3-lch ==> del((2), 2)
+            prev = (1), 2 <- 1
+            del((1), 1), (1) <- nullptr // c
+            
+
+删除8和9后，出现 fl=0的情况, 此时归入LL, LR均可
+7 3 2 1 5 4 6 9 8 10
+1 2 3 4 5 6 7 8 9 10
+          7
+     3        10
+  2    5    
+1    4  6
+
+     3
+  2     7
+1     5   10
+    4  6
+    
+     5
+  3     7
+ 2 4   6 10
+1
+*/
