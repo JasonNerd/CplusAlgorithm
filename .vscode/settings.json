@@ -1,0 +1,22 @@
+{
+    "files.associations": {
+        "vector": "cpp",
+        "queue": "cpp",
+        "algorithm": "cpp",
+        "deque": "cpp",
+        "iomanip": "cpp",
+        "istream": "cpp",
+        "iterator": "cpp",
+        "list": "cpp",
+        "ostream": "cpp",
+        "unordered_map": "cpp",
+        "xhash": "cpp",
+        "xlocmon": "cpp",
+        "xlocnum": "cpp",
+        "xstring": "cpp",
+        "string": "cpp",
+        "iostream": "cpp",
+        "utility": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "enabled"
+}
