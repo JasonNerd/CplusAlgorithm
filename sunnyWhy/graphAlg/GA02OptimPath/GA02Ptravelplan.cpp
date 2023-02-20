@@ -20,8 +20,95 @@ he numbers must be separated by a space and there must be no extra space at the 
 #include <vector>
 
 using namespace std;
+struct gnode{
+    int v, dis, cst;    // dis距离, cos花费
+    gnode(int v, int dis, int cst){
+        this->dis = dis;
+        this->cst = cst;
+        this->v = v;
+    }
+};
+const int MAXN = 101;
+vector<gnode> graph[MAXN];  // 邻接表
+int city_num, road_num, loc_id, dest_id;    // 点数, 边数, 所在城市编号, 目的城市编号
+bool having_visted[MAXN];   // 记录是否收敛
+int opt_prev[MAXN], opt_path[MAXN], opt_cost[MAXN]; // 前向顶点, 最短路径长度, 最小花费
+vector<int> resp;   // 存放最短路径
+
+void input_graph();     // 输入图信息
+void init_state();      // 状态初始化
+int select();           // 选点
+void slacken();         // 松弛
+void get_path(int p);   // 获取路径
+
+void input_graph(){
+    cin >> city_num >> road_num >> loc_id >> dest_id;
+    int ft, tf, dis, cst; // 注意是无向边
+    for(int i=0; i<road_num; i++){
+        cin >> ft >> tf >> dis >> cst;
+        graph[ft].push_back(gnode(tf, dis, cst));
+        graph[tf].push_back(gnode(ft, dis, cst));
+    }
+}
+
+void init_state(){
+    for (int i=0; i<city_num; i++){
+        opt_path[i] = MAXN;
+        opt_cost[i] = MAXN;
+        opt_prev[i] = -1;
+        having_visted[i] = false;
+    }
+    opt_cost[loc_id] = opt_path[loc_id] = 0;
+}
+
+void slacken(){
+    // 1. 寻找未访问的最近节点
+    int p = select();
+    // 2. 遍历邻居
+    for (auto nd: graph[p]){
+        int acr_dis = opt_path[p] + nd.dis; // 经过p得到的路径长
+        int acr_cst = opt_cost[p] + nd.cst; // 经过p得到的花费
+        if (acr_dis < opt_path[nd.v]){  // 进行一个松弛
+            opt_cost[nd.v] = acr_cst;
+            opt_path[nd.v] = acr_dis;
+            opt_prev[nd.v] = p;
+        }else if (acr_dis == opt_path[nd.v]){   // 依据花费更新
+            if(acr_cst < opt_cost[nd.v]){   // 经过p可以得到更小的花费
+                opt_cost[nd.v] = acr_cst;   // 更新花费
+                opt_prev[nd.v] = p;         // 更新路径
+            }
+        }
+    }
+    having_visted[p] = true;    // 标记为已处理
+}
+
+int select(){
+    int mid=-1, mw=MAXN;
+    for(int i=0; i<city_num; i++){
+        if(!having_visted[i] && (opt_path[i] < mw)){
+            mid = i;
+            mw = opt_path[i];
+        }
+    }
+    return mid;
+}
+
+void get_path(int p){
+    if(p == -1)
+        return ;
+    get_path(opt_prev[p]);
+    resp.push_back(p);
+}
 
 int main(){
+    input_graph();
+    init_state();
+    for(int i=0; i<city_num; i++)
+        slacken();
+    get_path(dest_id);
+     for(auto nd: resp)
+        cout << nd << " ";
+    cout << opt_path[dest_id] << " " << opt_cost[dest_id];
     return 0;
 }
 

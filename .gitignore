@@ -34,3 +34,8 @@ Ebooks/200349  算法笔记.胡凡.pdf
 *.exe
 *.out
 *.app
+
+# temporary folders
+tmpdirs/
+
+
