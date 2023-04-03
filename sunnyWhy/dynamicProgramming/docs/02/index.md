@@ -1,5 +1,5 @@
 ---
-title: "动态规划专题-经典问题集"
+title: "动态规划专题-经典问题集（一）"
 date: 2023-03-30T11:32:13+08:00
 draft: false
 tags: ["算法", "动态规划"]
@@ -235,6 +235,89 @@ dp[i+1][j+1] = (a[i]==b[j])? dp[i][j]+1 : max(dp[i][j+1], dp[i+1][j])
 
 还是先看暴力解法:枚举子串的两个端点i和j，判断在[i, j]区间内的子串是否回文。从复杂度上来看，枚举端点需要 O(n^2)，判断回文需要 O(n)，因此总复杂度是 O(n^3)。可能会有读者想把这个问题转换为最长公共子序列(LCS)问题来求解:把字符串 S 倒过来变成字符串 T，然后对S和T进行LCS 模型求解，得到的结果就是需要的答案。而事实上这种做法是错误的，因为一旦 S中同时存在一个子串和它的倒序，那么答案就会出错。例如字符串S="ABCDZJUDCBA”，将其倒过来之后会变成T="ABCDUJZDCBA"，这样得到最长公共子串为"ABCD”，长度为4，而事实上S 的最长回文子长度为 1。因此这样的做法是不行的。
 
-## DAG最长路/最短路
+1. 暴力搜索
+```c++
+#include <iostream>
+#include <string>
+using namespace std;
+bool judge_ok(int i, int j);
+void palindrome(int& mxl);
+string iptstr;
+// 暴力搜索
+void palindrome(int& mxl){
+    for(int i=0; i<iptstr.length(); i++){
+        for(int j=i; j<iptstr.length(); j++){
+            if(judge_ok(i, j))
+                mxl = (j-i+1) > mxl ? (j-i+1) : mxl;
+        }
+        cout << "i = " << i << ", mxl = " << mxl << endl;
+    }
+}
 
+// if a string is a palindrome
+bool judge_ok(int i, int j){
+    while(i<=j){
+        if(iptstr[i]==iptstr[j]){
+            ++i;
+            --j;
+        }else return false;
+    }
+    return true;
+}
+
+int main(){
+    cin >> iptstr;
+    int mxl = 0;
+    palindrome(mxl);
+    cout << mxl;
+    return 0;
+}
+
+```
+2. 使用dp数组
+```c++
+// 给出一个字符串S，求S的最长回文子串的长度
+// 定义状态数组dp[][], dp[i][j]表示S[i, ...,j]是否为回文字符串, i<=j
+// 于是: dp[i][j] = (S[i] == S[j]) ? dp[i+1][j-1]: false;
+#include <iostream>
+#include <string>
+using namespace std;
+string iptstr, substr;
+
+void palindrome(){
+    int n = iptstr.length();
+    // 定义一个上三角布尔数组
+    bool **dp = new bool* [n];
+    for(int i=0; i<n; i++)
+        dp[i] = new bool [n-i];
+    substr = iptstr[0];
+    // 初始化: 从左上[0, 0]到右下[n-1, n-1]的两条对角线
+    for(int i=0; i<n; i++)
+        dp[i][i] = true;
+    for(int i=0; i<n-1; i++)
+        if(iptstr[i]==iptstr[i+1]){
+            dp[i][i+1] = true;
+            substr = iptstr.substr(i, 2);
+        }else dp[i][i+1]=false;
+    // 接着 fill the rest slope
+    for(int layer=3; layer<=n; layer++){
+        for(int i=0; i<=n-layer; i++){
+            if(iptstr[i] == iptstr[layer+i-1]){
+                dp[i][layer-1+i] = dp[i+1][layer-2+i];
+                if(dp[i][layer-1+i]) substr = iptstr.substr(i, layer);
+            }else dp[i][layer-1+i] = false;
+        }
+    }
+}
+
+int main(){
+    while(true){
+        cin >> iptstr;
+        palindrome();
+        cout << substr << endl;
+        if(substr.length()==1)break;
+    }
+    return 0;
+}
+```
 

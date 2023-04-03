@@ -1,13 +1,4 @@
-/*
-1. 基本描述
-并(Union)查(Find)集(Set)
-ufs描述的是集合，主要支持U集合间的合并操作和F判断元素所在的集合
-2. 实现方法
-也即一个数组:
-    int father[N];  // 并查集，包含多个集合
-father[i]表示i的父亲节点， father[i]=i表示i为根节点，
-注意一个集合只有一个根节点，是该集合的标识
-*/
+
 #include <iostream>
 using namespace std;
 const int NUM = 50;
